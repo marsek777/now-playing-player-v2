@@ -1,0 +1,77 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "bin/**"
+      - "README.md"
+      - "docs/**"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller pytest
+
+      - name: Tests
+        run: python -m pytest -q
+
+      - name: Smoke test (Windows SMTC backend)
+        run: python run.py --once --json
+
+      - name: Smoke test (built-in player)
+        env:
+          SDL_AUDIODRIVER: dummy
+        run: python -c "from nowplaying.local_player import LocalPlayer; import pygame, mutagen; print('ok', pygame.version.ver)"
+
+      - name: Build exe
+        run: pyinstaller --noconfirm --noconsole --onefile --name NowPlaying --collect-all winrt --collect-all pygame --hidden-import mutagen run.py
+
+      - name: Smoke test exe
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist\NowPlaying.exe -ArgumentList "--version" -PassThru -Wait
+          Write-Host "exit code: $($p.ExitCode)"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NowPlaying-windows
+          path: dist/NowPlaying.exe
+
+      - name: Commit exe to repository (bin/NowPlaying.exe)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path bin | Out-Null
+          Copy-Item dist\NowPlaying.exe bin\NowPlaying.exe -Force
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add bin/NowPlaying.exe
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "Сборка NowPlaying.exe [skip ci]"
+            git push
+          }
+          exit 0
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Now Playing 2 (последняя сборка)
+          body: Готовый NowPlaying.exe для Windows 10/11 — плеер со своими плейлистами и Spotify. Просто скачайте и запустите.
+          files: dist/NowPlaying.exe
+          make_latest: true

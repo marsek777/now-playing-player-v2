@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nowplaying-player-v2"
+version = "2.0.0"
+description = "Плеер-виджет: видит, что играет на компьютере, плюс свои плейлисты и Spotify с выбором трека"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = [
+  "Pillow>=10.0",
+  "pygame-ce>=2.4",
+  "mutagen>=1.46",
+  "winrt-runtime>=2.0; sys_platform == 'win32'",
+  "winrt-Windows.Media.Control>=2.0; sys_platform == 'win32'",
+  "winrt-Windows.Storage.Streams>=2.0; sys_platform == 'win32'",
+  "winrt-Windows.Foundation>=2.0; sys_platform == 'win32'",
+  "winrt-Windows.Foundation.Collections>=2.0; sys_platform == 'win32'",
+]
+
+[project.scripts]
+nowplaying = "nowplaying.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["nowplaying*"]

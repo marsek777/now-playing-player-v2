@@ -1,0 +1,8 @@
+Pillow>=10.0
+pygame-ce>=2.4
+mutagen>=1.46
+winrt-runtime>=2.0; sys_platform == "win32"
+winrt-Windows.Media.Control>=2.0; sys_platform == "win32"
+winrt-Windows.Storage.Streams>=2.0; sys_platform == "win32"
+winrt-Windows.Foundation>=2.0; sys_platform == "win32"
+winrt-Windows.Foundation.Collections>=2.0; sys_platform == "win32"
